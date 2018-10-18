@@ -1,5 +1,5 @@
-#include <stdio.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include "avl.h"
 
 void inicializar(arvore *raiz) {
@@ -13,45 +13,45 @@ arvore adicionar (int valor, arvore raiz, int *propagaFB) {
 		novo->esq = NULL;
 		novo->dir = NULL;
 		novo->fb = 0;
-	  * propagaFB = 1;
+	  *propagaFB = 1;
 		return novo;
 	}
 
 	if(valor > raiz->dado) {
 		raiz->dir = adicionar(valor, raiz->dir, propagaFB);
-	  if(*propagaFB) {
+	  	if(*propagaFB) {
 				switch(raiz->fb) {
-						case 0:
-								raiz->fb = 1;
-								break;
-						case -1:
-								raiz->fb = 0;
-								propagaFB = 0;
-								break;
-						case 1:
-								propagaFB = 0;
-								return rotacionar(raiz);
-				}
-		}
+					case 0:
+						raiz->fb = 1;
+						break;
+					case -1:
+						raiz->fb = 0;
+						*propagaFB = 0;
+						break;
+					case 1:
+						*propagaFB = 0;
+						return rotacionar(raiz);
+					}
+			}
 
 	} else {
 		raiz->esq = adicionar(valor, raiz->esq, propagaFB);
-	  if(*propagaFB) {
-				switch(raiz->fb) {
-						case 0:
-								raiz->fb = -1;
-								break;
-						case -1:
-								propagaFB = 0;
-								return rotacionar(raiz);
-
-						case 1:
-								raiz->fb = 0;
-								propagaFB = 0;
-								break;
-				}
+	  	if(*propagaFB) {
+			switch(raiz->fb) {
+				case 0:
+					raiz->fb = -1;
+					break;
+				case -1:
+					*propagaFB = 0;
+					return rotacionar(raiz);
+				case 1:
+					raiz->fb = 0;
+					*propagaFB = 0;
+					break;
+			}
 		}
 	}
+
 	return raiz;
 }
 
@@ -115,25 +115,64 @@ void imprimir_elemento(arvore raiz) {
 	printf("%d [%d]", raiz->dado, raiz->fb);
 }
 
-arvore remover (int valor, arvore raiz) {
-	if(raiz == NULL) 
+arvore remover (int valor, arvore raiz, int *propagaFB) {
+	if(raiz == NULL)
 		return NULL;
 
 	if(raiz->dado == valor) {
-		if(raiz->esq == NULL) {
+		if(raiz->esq == NULL && raiz->dir != NULL) {
+			*propagaFB = 1;
 			return raiz->dir;
 		}
-		if(raiz->dir == NULL) {
+		if(raiz->dir == NULL && raiz->esq != NULL) {
+			*propagaFB = 1;
 			return raiz->esq;
 		}
+		if (raiz->dir == NULL && raiz->esq == NULL) {
+				*propagaFB = 1;
+				return NULL;
+		}
 		raiz->dado = maior_elemento(raiz->esq);
-		raiz->esq = remover(raiz->dado, raiz->esq);
+		raiz->esq = remover(raiz->dado, raiz->esq, propagaFB);
+		*propagaFB = 1;
 		return raiz;
 	}
 	if(valor > raiz->dado) {
-			raiz->dir = remover(valor, raiz->dir);
+			raiz->dir = remover(valor, raiz->dir, propagaFB);
+			if(*propagaFB) {
+				printf("if do propaga dir\n");
+				switch(raiz->fb) {
+					case 0:
+						raiz->fb = -1;
+						*propagaFB = 1;
+						break;
+					case -1:
+						*propagaFB = 1;
+						return rotacionar(raiz);
+						break;
+					case 1:
+						raiz->fb = 0;
+						*propagaFB = 1;
+					}
+			}
 	} else {
-			raiz->esq = remover(valor, raiz->esq);
+			raiz->esq = remover(valor, raiz->esq, propagaFB);
+			if(*propagaFB) {
+				printf("if do propaga esq\n");
+				switch(raiz->fb) {
+					case 0:
+						raiz->fb = 1;
+						*propagaFB = 1;
+						break;
+					case -1:
+						raiz->fb = 0;
+						*propagaFB = 1;
+						break;
+					case 1:
+						*propagaFB = 1;
+						return rotacionar(raiz);
+					}
+			}
 	}
 	return raiz;
 
@@ -152,35 +191,28 @@ void imprimir(arvore raiz) {
 
 arvore rotacionar(arvore raiz) {
 	if(raiz->fb > 0) {
-			switch(raiz->dir->fb)
-			{
-						case 1:
-								return rotacao_simples_esquerda(raiz);
-						case -1:
-								return rotacao_dupla_esquerda(raiz);
-						case 0:
-								return raiz;
-			}
+		switch(raiz->dir->fb) {
+			case 1:
+				return rotacao_simples_esquerda(raiz);
+			case -1:
+				return rotacao_dupla_esquerda(raiz);
+			case 0:
+				return raiz;
+		}
 	} else {
-			switch(raiz->esq->fb) {
-				case -1:
-						return rotacao_simples_direita(raiz);
-				case 1:
-						return rotacao_dupla_direita(raiz);
-				case 0:
-						return raiz;
-			}
+		switch(raiz->esq->fb) {
+			case -1:
+				return rotacao_simples_direita(raiz);
+			case 1:
+				return rotacao_dupla_direita(raiz);
+			case 0:
+				return raiz;
+		}
 	}
 }
 
-
-
-
-
-
 arvore rotacao_simples_direita(arvore raiz) {
 	arvore p, u;
-	printf("rotacao simples direita\n");
 
 	p = raiz;
 	u = raiz->esq;
@@ -191,29 +223,26 @@ arvore rotacao_simples_direita(arvore raiz) {
 	p->fb = 0;
 	u->fb = 0;
 
-
-
 	return u;
 }
 
 arvore rotacao_simples_esquerda(arvore raiz) {
 	arvore p,u;
-	printf("rotacao simples esquerda\n");
+
 	p = raiz;
 	u = raiz->dir;
 
 	p->dir = u->esq;
 	u->esq = p;
 
-	p->fb = 0;
 	u->fb = 0;
+	p->fb = 0;
 
 	return u;
 }
 arvore rotacao_dupla_direita(arvore raiz) {
+	arvore p, u, v;
 
-	arvore p,u, v;
-	printf("rotacao dupla direita\n");
 	p = raiz;
 	u = raiz->esq;
 	v = u->dir;
@@ -224,36 +253,56 @@ arvore rotacao_dupla_direita(arvore raiz) {
 	p->esq = v->dir;
 	v->dir = p;
 
-	switch(v->fb){
-
-	case 0:
-	p->fb = 0;
-	u->fb = 0;
-	break;
-	case 1:
-	v->fb = 0;
-	p->fb = 0;
-	u->fb = -1;
-	break;
-	case -1:
-	p->fb = 1;
-	v->fb = 0;
-	u->fb = 0;
-
+	switch(v->fb) {
+		case 0:
+			v->fb = 0;
+			u->fb = 0;
+			p->fb = 0;
+			break;
+		case 1:
+			v->fb = 0;
+			u->fb = -1;
+			p->fb = 0;
+			break;
+		case -1:
+			v->fb = 0;
+			u->fb = 0;
+			p->fb = 1;
+			break;
 	}
-
 
 	return v;
 }
 arvore rotacao_dupla_esquerda(arvore raiz) {
-	printf("rotacao dupla esquerda\n");
+    arvore p, u, v;
 
-	arvore v, u, p;
+    p = raiz;
+    u = raiz->dir;
+    v = u->esq;
 
-	p = raiz;
-	u = raiz->esq;
+    u->esq = v->dir;
+		v->dir = u;
 
+		p->dir = v->esq;
+		v->esq = p;
 
+		switch(v->fb) {
+			case 0:
+				v->fb = 0;
+				u->fb = 0;
+				p->fb = 0;
+				break;
+			case 1:
+				v->fb = 0;
+				u->fb = 0;
+				p->fb = -1;
+				break;
+			case -1:
+				v->fb = 0;
+				u->fb = 1;
+				p->fb = 0;
+				break;
+		}
 
-	return raiz;
+	return v;
 }
