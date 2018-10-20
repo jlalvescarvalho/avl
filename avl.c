@@ -120,18 +120,16 @@ arvore remover (int valor, arvore raiz, int *propagaFB) {
 		return NULL;
 
 	if(raiz->dado == valor) {
-		if(raiz->esq == NULL && raiz->dir != NULL) {
+
+		if(raiz->esq == NULL) {
 			*propagaFB = 1;
 			return raiz->dir;
 		}
-		if(raiz->dir == NULL && raiz->esq != NULL) {
+		if(raiz->dir == NULL) {
 			*propagaFB = 1;
 			return raiz->esq;
 		}
-		if (raiz->dir == NULL && raiz->esq == NULL) {
-				*propagaFB = 1;
-				return NULL;
-		}
+
 		raiz->dado = maior_elemento(raiz->esq);
 		raiz->esq = remover(raiz->dado, raiz->esq, propagaFB);
 		*propagaFB = 1;
@@ -140,29 +138,28 @@ arvore remover (int valor, arvore raiz, int *propagaFB) {
 	if(valor > raiz->dado) {
 			raiz->dir = remover(valor, raiz->dir, propagaFB);
 			if(*propagaFB) {
-				printf("if do propaga dir\n");
+				printf("%d\n", raiz->dado);
 				switch(raiz->fb) {
 					case 0:
 						raiz->fb = -1;
-						*propagaFB = 1;
+						*propagaFB = 0;
 						break;
 					case -1:
 						*propagaFB = 1;
 						return rotacionar(raiz);
-						break;
 					case 1:
 						raiz->fb = 0;
 						*propagaFB = 1;
+						break;
 					}
 			}
 	} else {
 			raiz->esq = remover(valor, raiz->esq, propagaFB);
 			if(*propagaFB) {
-				printf("if do propaga esq\n");
 				switch(raiz->fb) {
 					case 0:
 						raiz->fb = 1;
-						*propagaFB = 1;
+						*propagaFB = 0;
 						break;
 					case -1:
 						raiz->fb = 0;
@@ -175,9 +172,7 @@ arvore remover (int valor, arvore raiz, int *propagaFB) {
 			}
 	}
 	return raiz;
-
 }
-
 
 void imprimir(arvore raiz) {
 	printf("(");
